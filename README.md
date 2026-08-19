@@ -1,43 +1,63 @@
-# RealSense D455 stereo capture
+# RealSense D455 stereo capture (C++)
 
 Capture the Intel RealSense D455 stereo module **IR Left / IR Right** streams and save them as `left.png` and `right.png`.
 
-## Setup
+This C++ build links `librealsense2` directly, so it does not need `pyrealsense2`.
 
-1. Install [Intel RealSense SDK 2.0](https://github.com/IntelRealSense/librealsense/releases) (on Windows, use the official installer).
-2. Plug in the D455 and confirm the camera appears in Device Manager.
-3. Python 3.10+:
+## Dependencies (Jetson)
 
-```powershell
-cd d:\stereo
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+```bash
+sudo apt-get update
+sudo apt-get install -y \
+  build-essential cmake pkg-config \
+  libopencv-dev \
+  librealsense2-dev librealsense2-utils
+```
+
+If you built librealsense from source instead of apt, `librealsense2-dev` is not required; `sudo make install` is enough. You still need OpenCV (`libopencv-dev` or JetPack OpenCV).
+
+## Build
+
+```bash
+cd /path/to/stereo
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j"$(($(nproc)-1))"
 ```
 
 ## Usage
 
 During preview, press **Space** to save and **Q** or **Esc** to quit:
 
-```powershell
-python capture_stereo.py
+```bash
+./build/capture_stereo
 ```
 
 Common options:
 
-```powershell
+```bash
 # Output directory and resolution
-python capture_stereo.py --out captures --width 1280 --height 800 --fps 30
+./build/capture_stereo --out captures --width 1280 --height 800 --fps 30
 
 # Save 10 pairs per Space press
-python capture_stereo.py --count 10
+./build/capture_stereo --count 10
 
 # Also save RGB (color camera, not the stereo pair)
-python capture_stereo.py --rgb
+./build/capture_stereo --rgb
 
 # Enable the IR dot projector (usually leave this off for passive stereo matching)
-python capture_stereo.py --emitter
+./build/capture_stereo --emitter
 ```
+
+If `1280x800` fails to start, try `--width 640 --height 480`.
+
+If CMake cannot find RealSense:
+
+```bash
+export CMAKE_PREFIX_PATH=/usr/local:$CMAKE_PREFIX_PATH
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+```
+
+If `rs-enumerate-devices` works but this program cannot open the camera, unplug other RealSense apps (including `realsense-viewer`) and retry. On Jetson USB issues, rebuild librealsense with `-DFORCE_RSUSB_BACKEND=ON`.
 
 Output layout:
 
@@ -53,4 +73,4 @@ captures/
 
 - Left/right images come from the **stereo infrared cameras**, not a split RGB image.
 - For SGBM / depth estimation, keep the **emitter off** (the default) so the dot pattern does not interfere with texture.
-- If `1280x800` fails to start, try `--width 640 --height 480`.
+- Headless SSH: OpenCV windows need a display. Use a desktop session, or `ssh -X`, or run on the device monitor.
