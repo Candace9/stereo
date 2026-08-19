@@ -1,9 +1,10 @@
 # RealSense D455 stereo capture (C++)
 
-Two programs:
+Three programs:
 
 1. **`capture_stereo`** — capture D455 IR **left/right** and **RGB** (no disparity).
 2. **`compute_disparity`** — run OpenCV SGBM on folders that contain `left.png` and `right.png`.
+3. **`compute_depth`** — convert `disparity_raw.png` to metric depth using `camera_paramter/D455_depth.json`.
 
 This C++ build links `librealsense2` directly, so it does not need `pyrealsense2`.
 
@@ -56,6 +57,27 @@ If `1280x800` fails to start, try `--width 640 --height 480`.
 
 `--show` opens preview windows (needs a display). Without it, the tool can run headless.
 
+## 3. Compute depth
+
+Requires `disparity_raw.png` from step 2. Uses \(Z = f_x B / d\) from the calib JSON.
+
+```bash
+./build/compute_depth captures
+./build/compute_depth captures/20260819_151230_123
+./build/compute_depth --calib camera_paramter/D455_depth.json --max-z 8 captures
+./build/compute_depth --show captures
+```
+
+`--max-z` clips the color preview and the point cloud. Metric `depth_m.tiff` / `depth_mm.png` still keep all valid depths.
+
+Point cloud: `cloud.ply` (binary, meters, OpenCV camera frame: X right, Y down, Z forward). Color comes from `rgb.png` if present, otherwise `left.png`. Open in CloudCompare or MeshLab.
+
+```bash
+./build/compute_depth --max-z 8 captures
+./build/compute_depth --stride 2 captures      # lighter cloud
+./build/compute_depth --no-cloud captures      # depth images only
+```
+
 ## Output layout
 
 ```
@@ -67,6 +89,10 @@ captures/
     disparity.png         # after compute_disparity
     disparity_hist.png
     disparity_raw.png     # 16-bit SGBM output (value = disparity * 16)
+    depth.png             # colorized depth (near = warm)
+    depth_mm.png          # 16-bit depth in millimeters (0 = invalid)
+    depth_m.tiff          # 32-bit float depth in meters (0 = invalid)
+    cloud.ply             # XYZRGB point cloud (meters)
 ```
 
 ## Notes

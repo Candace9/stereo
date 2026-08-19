@@ -1,0 +1,46 @@
+{
+    "camera": "Intel RealSense D455",
+    "stream": "infrared_stereo",
+    "source": "camera_paramter/D455.json",
+    "image": {
+        "width": 1280,
+        "height": 800
+    },
+    "intrinsics": {
+        "fx": 659.818969726562,
+        "fy": 659.818969726562,
+        "cx": 647.848266601562,
+        "cy": 400.091033935547,
+        "K": [
+            [659.818969726562, 0.0, 647.848266601562],
+            [0.0, 659.818969726562, 400.091033935547],
+            [0.0, 0.0, 1.0]
+        ]
+    },
+    "extrinsics": {
+        "translation_m": [-0.095045231282711, 0.0, 0.0],
+        "baseline_m": 0.095045231282711,
+        "baseline_mm": 95.045231282711,
+        "Tx_m": -0.095045231282711
+    },
+    "depth": {
+        "formula": "Z = fx * baseline_m / disparity_px",
+        "Z_unit": "meter",
+        "disparity_unit": "pixel",
+        "fx_times_baseline_m": 62.7126465823812,
+        "sgbm_output_scale": 16,
+        "valid_if": "disparity_px > 0",
+        "notes": [
+            "Use fx (pixels) and baseline_m (meters). fy is not used for Z from horizontal disparity.",
+            "OpenCV StereoSGBM writes 16 * disparity in a 16-bit image. disparity_px = raw / 16.",
+            "Z_m = fx_times_baseline_m / disparity_px. Invalid / unmatched pixels must be skipped.",
+            "Original translation x is negative (OpenCV-style Tx). Depth uses baseline_m = abs(Tx)."
+        ]
+    },
+    "reprojection_matrix_Q": [
+        [1.0, 0.0, 0.0, -647.848266601562],
+        [0.0, 1.0, 0.0, -400.091033935547],
+        [0.0, 0.0, 0.0, 659.818969726562],
+        [0.0, 0.0, 10.5213063980613, 0.0]
+    ]
+}
