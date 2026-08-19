@@ -1,6 +1,9 @@
 # RealSense D455 stereo capture (C++)
 
-Capture the Intel RealSense D455 stereo module **IR Left / IR Right** streams, save them as `left.png` and `right.png`, then compute an OpenCV SGBM **disparity map** and histogram.
+Two programs:
+
+1. **`capture_stereo`** — capture D455 IR **left/right** and **RGB** (no disparity).
+2. **`compute_disparity`** — run OpenCV SGBM on folders that contain `left.png` and `right.png`.
 
 This C++ build links `librealsense2` directly, so it does not need `pyrealsense2`.
 
@@ -24,62 +27,52 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j"$(($(nproc)-1))"
 ```
 
-## Usage
+## 1. Capture images
 
-During preview, press **Space** to save and **Q** or **Esc** to quit:
+Click the OpenCV window first, then **Space** / **S** to save, **Q** / **Esc** to quit. Keys also work in the terminal. Left-click the preview to save.
+
+RGB is saved by default.
 
 ```bash
 ./build/capture_stereo
-```
-
-Common options:
-
-```bash
-# Output directory and resolution
 ./build/capture_stereo --out captures --width 1280 --height 800 --fps 30
-
-# Save 10 pairs per Space press
 ./build/capture_stereo --count 10
-
-# Also save RGB (color camera, not the stereo pair)
-./build/capture_stereo --rgb
-
-# Enable the IR dot projector (usually leave this off for passive stereo matching)
+./build/capture_stereo --no-rgb
 ./build/capture_stereo --emitter
-
-# SGBM search range (must be a multiple of 16). Larger = farther near objects, slower
-./build/capture_stereo --num-disp 192 --block-size 5
-
-# Save images only, skip disparity
-./build/capture_stereo --no-disp
 ```
 
 If `1280x800` fails to start, try `--width 640 --height 480`.
 
-If CMake cannot find RealSense:
+## 2. Compute disparity
+
+`PATH` can be one pair folder, or a parent folder of many pair folders:
 
 ```bash
-export CMAKE_PREFIX_PATH=/usr/local:$CMAKE_PREFIX_PATH
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+./build/compute_disparity captures
+./build/compute_disparity captures/20260819_151230_123
+./build/compute_disparity --num-disp 192 --block-size 5 captures
+./build/compute_disparity --show captures
 ```
 
-If `rs-enumerate-devices` works but this program cannot open the camera, unplug other RealSense apps (including `realsense-viewer`) and retry. On Jetson USB issues, rebuild librealsense with `-DFORCE_RSUSB_BACKEND=ON`.
+`--show` opens preview windows (needs a display). Without it, the tool can run headless.
 
-Output layout:
+## Output layout
 
 ```
 captures/
   20260819_151230_123/
     left.png
     right.png
-    rgb.png               # only with --rgb
-    disparity.png         # colorized disparity map
-    disparity_hist.png    # disparity histogram
+    rgb.png               # unless --no-rgb
+    disparity.png         # after compute_disparity
+    disparity_hist.png
     disparity_raw.png     # 16-bit SGBM output (value = disparity * 16)
 ```
 
 ## Notes
 
 - Left/right images come from the **stereo infrared cameras**, not a split RGB image.
-- For SGBM / depth estimation, keep the **emitter off** (the default) so the dot pattern does not interfere with texture.
-- Headless SSH: OpenCV windows need a display. Use a desktop session, or `ssh -X`, or run on the device monitor.
+- For SGBM, keep the **emitter off** (the default) so the dot pattern does not interfere with texture.
+- If CMake cannot find RealSense: `export CMAKE_PREFIX_PATH=/usr/local:$CMAKE_PREFIX_PATH`
+- If `rs-enumerate-devices` works but capture cannot open the camera, close `realsense-viewer` and retry. On Jetson USB issues, rebuild librealsense with `-DFORCE_RSUSB_BACKEND=ON`.
+- Headless SSH: OpenCV windows need a display. Capture needs a desktop / `ssh -X`. `compute_disparity` without `--show` does not.
