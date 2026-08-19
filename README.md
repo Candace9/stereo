@@ -1,6 +1,6 @@
 # RealSense D455 stereo capture (C++)
 
-Capture the Intel RealSense D455 stereo module **IR Left / IR Right** streams and save them as `left.png` and `right.png`.
+Capture the Intel RealSense D455 stereo module **IR Left / IR Right** streams, save them as `left.png` and `right.png`, then compute an OpenCV SGBM **disparity map** and histogram.
 
 This C++ build links `librealsense2` directly, so it does not need `pyrealsense2`.
 
@@ -46,6 +46,12 @@ Common options:
 
 # Enable the IR dot projector (usually leave this off for passive stereo matching)
 ./build/capture_stereo --emitter
+
+# SGBM search range (must be a multiple of 16). Larger = farther near objects, slower
+./build/capture_stereo --num-disp 192 --block-size 5
+
+# Save images only, skip disparity
+./build/capture_stereo --no-disp
 ```
 
 If `1280x800` fails to start, try `--width 640 --height 480`.
@@ -66,7 +72,10 @@ captures/
   20260819_151230_123/
     left.png
     right.png
-    rgb.png          # only with --rgb
+    rgb.png               # only with --rgb
+    disparity.png         # colorized disparity map
+    disparity_hist.png    # disparity histogram
+    disparity_raw.png     # 16-bit SGBM output (value = disparity * 16)
 ```
 
 ## Notes

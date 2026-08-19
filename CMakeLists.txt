@@ -4,7 +4,7 @@ project(d455_stereo_capture LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs highgui)
+find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs highgui calib3d)
 find_package(realsense2 REQUIRED)
 
 add_executable(capture_stereo src/capture_stereo.cpp)
